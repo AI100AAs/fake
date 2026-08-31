@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>SignalCheck | News credibility lab</title>
+    <meta name="description" content="An educational workspace for examining claims, evidence, and bias in news articles.">
+    <meta name="theme-color" content="{{ theme_color }}">
+    <base href="{{ base_href }}">
+    <link rel="icon" href="{{ icon_url }}" sizes="192x192">
+    <link rel="stylesheet" href="{{ shared_asset_base }}base.css">
+    <link rel="stylesheet" href="{{ asset_base }}styles.css">
+  </head>
+  <body class="shell-body text-shell-body">
+    <div class="app-frame public-frame text-frame">
+      <main class="text-workspace" aria-label="SignalCheck news analysis workspace">
+        <header class="hero">
+          <div>
+            <p class="eyebrow">AI100 / UBC · EVIDENCE WORKBENCH</p>
+            <h1>Signal<span>Check</span></h1>
+            <p class="hero-copy">Slow down the headline. Separate claims from confidence, and keep a human in the loop.</p>
+          </div>
+          <div class="hero-actions"><button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false"><span aria-hidden="true">☾</span> Dark mode</button></div>
+        </header>
+
+        <section class="workspace-grid">
+          <section class="workspace-panel input-panel" aria-labelledby="input-title">
+            <div class="section-heading">
+              <div><p class="step-label">01 / INPUT</p><h2 id="input-title">Bring a story</h2></div>
+            </div>
+            <label class="sr-only" for="article-input">Article text or link</label>
+            <textarea id="article-input" rows="12" placeholder="Paste article text or a link here..."></textarea>
+            <div class="input-footer"><span id="char-count">0 characters</span><button class="analyze-button" id="analyze-button" type="button">Analyze story <span>→</span></button></div>
+            <p class="disclaimer">Prototype signal only. It does not establish truth or replace independent fact-checking.</p>
+          </section>
+
+          <section class="workspace-panel result-panel" aria-labelledby="result-title" aria-live="polite">
+            <div class="section-heading"><div><p class="step-label">02 / ASSESSMENT</p><h2 id="result-title">Your signal report</h2></div><span class="report-state" id="report-state">Waiting for input</span></div>
+            <div class="empty-report" id="empty-report"><div class="radar-mark">◎</div><h3>Ready when you are</h3><p>Paste a story to see claim extraction, evidence cues, and a transparent confidence signal.</p></div>
+            <div class="report-content" id="report-content" hidden>
+              <div class="score-row"><div class="score-ring" id="score-ring"><strong id="score-value">--</strong><span>/ 100</span></div><div><p class="score-kicker">CREDIBILITY SIGNAL</p><h3 id="score-label">Unscored</h3><p id="score-summary"></p></div></div>
+              <div class="report-block"><div class="block-title"><span>Claim-by-claim breakdown</span><small id="claim-count"></small></div><div class="claim-list" id="claim-list"></div></div>
+              <div class="report-block"><div class="block-title"><span>Signals to investigate</span></div><div class="signal-list" id="signal-list"></div></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="workspace-panel knowledge-panel" aria-labelledby="knowledge-title">
+          <div class="section-heading"><div><p class="step-label">03 / KNOWLEDGE BASE</p><h2 id="knowledge-title">Your reference shelf</h2></div><span class="report-state" id="knowledge-state">Loading references...</span></div>
+          <p class="panel-intro">Add trusted sources, class notes, or background facts. SignalCheck will cross-reference them against extracted claims by shared terms.</p>
+          <form class="knowledge-form" id="knowledge-form">
+            <label><span>Reference title</span><input id="knowledge-title-input" name="title" maxlength="160" required placeholder="e.g. WHO air quality guidance"></label>
+            <label><span>Source link <em>optional</em></span><input id="knowledge-source" name="sourceUrl" type="url" placeholder="https://..."></label>
+            <label class="notes-field"><span>What should this support or clarify?</span><textarea id="knowledge-notes" name="notes" rows="3" maxlength="4000" required placeholder="Paste a short excerpt or write a reliable fact..."></textarea></label>
+            <button class="text-button add-reference" type="submit">+ Add reference</button>
+          </form>
+          <div class="knowledge-list" id="knowledge-list" aria-live="polite"></div>
+          <p class="knowledge-empty" id="knowledge-empty" hidden>No references yet. Add one to make claim cross-checking more useful.</p>
+        </section>
+
+        <section class="workspace-panel chat-panel" aria-labelledby="chat-title">
+          <div class="section-heading"><div><p class="step-label">04 / ASK THE EVIDENCE DESK</p><h2 id="chat-title">Ask AI about your sources</h2></div><span class="report-state" id="chat-state">Answers use your reference shelf</span></div>
+          <p class="panel-intro">Ask a question about the saved references or the story currently in the workspace. The course model will show uncertainty instead of inventing support.</p>
+          <div class="chat-messages" id="chat-messages" aria-live="polite">
+            <div class="chat-message assistant"><strong>Evidence desk</strong><p>Ask me to compare a claim with your references, explain a source, or point out what is still missing.</p></div>
+          </div>
+          <form class="chat-form" id="chat-form">
+            <label class="sr-only" for="chat-input">Question for the evidence desk</label>
+            <textarea id="chat-input" rows="2" maxlength="1200" required placeholder="e.g. Which saved source is most relevant to the main claim?"></textarea>
+            <button class="analyze-button" id="chat-submit" type="submit">Ask AI <span>→</span></button>
+          </form>
+        </section>
+
+        <section class="workspace-panel history-panel" aria-labelledby="history-title">
+          <div class="section-heading"><div><p class="step-label">05 / HISTORY</p><h2 id="history-title">Stories you've checked</h2></div><span class="report-state" id="history-state">Loading history...</span></div>
+          <div class="history-list" id="history-list" aria-live="polite"></div>
+          <p class="history-empty" id="history-empty" hidden>No analyzed stories yet. Your completed checks will appear here.</p>
+        </section>
+
+          <section class="method-strip" aria-label="Analysis procedure">
+           <div><span class="method-number">01</span><strong>Extract claims</strong><small>Find checkable statements</small></div><b>→</b><div><span class="method-number">02</span><strong>Retrieve context</strong><small>Compare sources and language</small></div><b>→</b><div><span class="method-number">03</span><strong>Judge with care</strong><small>Explain uncertainty, not just a label</small></div>
+         </section>
+         <footer class="course-attribution">
+           Sample project developed for <a href="https://www.cs.ubc.ca/~kevinlb/teaching/ai100/" target="_blank" rel="noreferrer">UBC's AI 100: Introduction to Artificial Intelligence</a> course.
+         </footer>
+       </main>
+    </div>
+    <div id="app-error" class="app-error" role="alert" aria-live="assertive" hidden></div>
+
+    <script id="gizmoapp-config" type="application/json">{{ client_config | tojson }}</script>
+    <script src="{{ shared_asset_base }}boot.js"></script>
+    <script type="module" src="{{ asset_base }}main.js"></script>
+  </body>
+</html>
