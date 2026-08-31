@@ -141,10 +141,11 @@ function bootstrap() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.errors?.[0] || "History could not be loaded.");
       historyList.replaceChildren(...payload.history.map((item) => renderHistoryItem(item, (selected, report) => {
-        input.value = selected.article_text;
-        render();
-        renderReport(report);
-        reportState.textContent = "Previous analysis restored";
+       input.value = selected.article_text;
+       render();
+        lastReport = report;
+       renderReport(report);
+       reportState.textContent = "Previous analysis restored";
         input.focus();
       })));
       historyEmpty.hidden = payload.history.length > 0;
