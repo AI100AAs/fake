@@ -12,29 +12,6 @@ function crossReferences(claim) {
   }).filter((match) => match.matchedTerms.length >= 2).sort((a, b) => b.matchedTerms.length - a.matchedTerms.length).slice(0, 3);
 }
 
-function analyze(text, sourceUrl = "") {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  const lower = text.toLowerCase();
-  const sensational = ["shocking", "miracle", "they don't want you to know", "100%", "everyone", "breaking"].filter((word) => lower.includes(word));
-  const hedges = ["may", "could", "suggests", "promising", "according to", "researchers say"].filter((word) => lower.includes(word));
-  const sourceCue = /study|research|report|data|university|researchers|according to/.test(lower);
-  const score = Math.max(18, Math.min(94, 54 + (sourceCue ? 18 : 0) + hedges.length * 4 - sensational.length * 15 - (words.length < 18 ? 10 : 0)));
-  const label = score >= 76 ? "Promising signal" : score >= 52 ? "Needs verification" : "High-risk signal";
-  const claims = text.split(/[.!?]+/).map((part) => part.trim()).filter((part) => part.length > 24).slice(0, 3).map((claim) => ({
-    claim,
-    assessment: sourceCue ? "mixed" : "unclear",
-    evidence: sourceCue ? "The article uses a source or research cue, but the underlying evidence still needs to be checked directly." : "This statement appears in the submitted text, but no independent supporting evidence was provided.",
-    sources: sourceUrl ? [{ title: "Article analyzed", url: sourceUrl, relevance: "Primary article containing this claim" }] : [],
-  }));
-  const signals = [];
-  if (sourceCue) signals.push(["context", "A source or research cue is present", "positive"]);
-  if (hedges.length) signals.push(["language", "Some uncertainty is acknowledged", "positive"]);
-  if (sensational.length) signals.push(["framing", "Emotionally loaded wording may amplify the claim", "caution"]);
-  if (!sourceCue) signals.push(["evidence", "No clear source cue found; verify the original evidence", "caution"]);
-  if (!claims.length) claims.push({ claim: text.trim().slice(0, 180), assessment: "unclear", evidence: "The text did not contain a longer sentence that could be separated reliably. Check the original context and supporting sources.", sources: sourceUrl ? [{ title: "Article analyzed", url: sourceUrl, relevance: "Primary article containing this claim" }] : [] });
-  return { score, label, claims, signals, summary: score >= 76 ? "The wording includes useful evidence cues and measured language." : score >= 52 ? "There are useful cues, but key claims still need source-level checking." : "Strong framing or thin evidence cues make this worth checking before sharing." };
-}
-
 function renderReport(report) {
   document.querySelector("#empty-report").hidden = true;
   document.querySelector("#report-content").hidden = false;

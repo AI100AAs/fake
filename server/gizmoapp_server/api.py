@@ -172,7 +172,6 @@ Source URL: {source_url}
 Article text:
 {article}'''
     result = ask(prompt, max_tokens=1200)
-    import json
     try:
         parsed = json.loads(result.strip().removeprefix("```json").removesuffix("```").strip())
     except json.JSONDecodeError as exc:
