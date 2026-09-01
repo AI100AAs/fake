@@ -99,6 +99,7 @@ function bootstrap() {
   const chatState = document.querySelector("#chat-state");
   const chatInput = document.querySelector("#chat-input");
   const chatSubmit = document.querySelector("#chat-submit");
+  let historyOwnerToken = null;
   const setTheme = (dark) => {
     document.documentElement.classList.toggle("dark-mode", dark);
     themeToggle.setAttribute("aria-pressed", String(dark));
@@ -114,7 +115,13 @@ function bootstrap() {
   input.addEventListener("input", render);
   const loadHistory = async () => {
     try {
-      const response = await fetch(`${config.apiBase}/history`);
+      if (!historyOwnerToken) {
+        const bootstrapResponse = await fetch(`${config.apiBase}/bootstrap`);
+        const bootstrapPayload = await bootstrapResponse.json();
+        if (!bootstrapResponse.ok || typeof bootstrapPayload.historyOwnerToken !== "string") throw new Error("History could not be initialized.");
+        historyOwnerToken = bootstrapPayload.historyOwnerToken;
+      }
+      const response = await fetch(`${config.apiBase}/history`, { headers: { "X-History-Owner": historyOwnerToken } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.errors?.[0] || "History could not be loaded.");
       historyList.replaceChildren(...payload.history.map((item) => renderHistoryItem(item, (selected, report) => {
@@ -210,7 +217,7 @@ function bootstrap() {
        renderReport(report);
       reportState.textContent = "Course model analysis complete";
       try {
-        const historyResponse = await fetch(`${config.apiBase}/history`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inputType: isUrl ? "url" : "text", sourceUrl: isUrl ? input.value.trim() : "", articleText, report }) });
+        const historyResponse = await fetch(`${config.apiBase}/history`, { method: "POST", headers: { "Content-Type": "application/json", "X-History-Owner": historyOwnerToken }, body: JSON.stringify({ inputType: isUrl ? "url" : "text", sourceUrl: isUrl ? input.value.trim() : "", articleText, report }) });
         if (!historyResponse.ok) throw new Error("History could not be saved.");
         await loadHistory();
       } catch (historyError) {

@@ -206,7 +206,13 @@ def _bootstrap_payload() -> dict[str, Any]:
         },
         "health": _health_payload(),
         "availableShells": current_app.config["AVAILABLE_SHELLS"],
+        "historyOwnerToken": secrets.token_hex(32),
     }
+
+
+def _history_owner_token() -> str | None:
+    token = request.headers.get("X-History-Owner", "")
+    return token if re.fullmatch(r"[0-9a-f]{64}", token) else None
 
 
 def _api_root() -> str:
@@ -367,10 +373,16 @@ def register_api_routes(app: Flask) -> None:
 
     @app.get(scoped_path(prefix, "api/history"))
     def article_history():
-        return jsonify({"history": fetch_article_history(get_db(), MAX_HISTORY_ITEMS)})
+        owner_token = _history_owner_token()
+        if owner_token is None:
+            return _error_response("A valid history owner token is required", 401)
+        return jsonify({"history": fetch_article_history(get_db(), owner_token, MAX_HISTORY_ITEMS)})
 
     @app.post(scoped_path(prefix, "api/history"))
     def save_article_history():
+        owner_token = _history_owner_token()
+        if owner_token is None:
+            return _error_response("A valid history owner token is required", 401)
         payload, error = _json_object()
         if error:
             return error
@@ -389,6 +401,7 @@ def register_api_routes(app: Flask) -> None:
         report_json = json.dumps(report, separators=(",", ":"))
         try:
             record = insert_article_history(get_db(), {
+                "owner_token": owner_token,
                 "input_type": input_type,
                 "source_url": source_url.strip(),
                 "article_text": article_text.strip(),

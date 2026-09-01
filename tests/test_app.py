@@ -54,7 +54,7 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertEqual(bootstrap.get_json()["app"]["shell"], "graphical")
         self.assertEqual(ready.status_code, 200)
         self.assertEqual(ready.get_json()["status"], "ready")
-        self.assertEqual(ready.get_json()["schemaVersion"], 2)
+        self.assertEqual(ready.get_json()["schemaVersion"], 3)
 
     def test_optional_routes_are_disabled_by_default(self):
         app = self.make_app(enabled_features=frozenset())
@@ -215,6 +215,23 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["articleText"], article)
         llm_report.assert_called_once_with(article, "")
+
+    def test_article_history_is_isolated_by_owner_token(self):
+        app = self.make_app()
+        client = app.test_client()
+        first_token = client.get("/api/bootstrap").get_json()["historyOwnerToken"]
+        second_token = client.get("/api/bootstrap").get_json()["historyOwnerToken"]
+        payload = {"inputType": "text", "articleText": "Private story for the first user.", "report": {"score": 91}}
+
+        saved = client.post("/api/history", headers={"X-History-Owner": first_token}, json=payload)
+        first_history = client.get("/api/history", headers={"X-History-Owner": first_token})
+        second_history = client.get("/api/history", headers={"X-History-Owner": second_token})
+        missing_token = client.get("/api/history")
+
+        self.assertEqual(saved.status_code, 201)
+        self.assertEqual(len(first_history.get_json()["history"]), 1)
+        self.assertEqual(second_history.get_json()["history"], [])
+        self.assertEqual(missing_token.status_code, 401)
 
 
 if __name__ == "__main__":

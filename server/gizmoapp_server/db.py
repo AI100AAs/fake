@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS app_events (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 """,
+    3: """
+ALTER TABLE article_history ADD COLUMN owner_token TEXT NOT NULL DEFAULT '';
+""",
 }
 LATEST_SCHEMA_VERSION = max(SCHEMA_MIGRATIONS)
 BUSY_TIMEOUT_MS = 10_000
@@ -104,7 +107,6 @@ def initialize_database(config: dict) -> None:
     try:
         connection.execute("PRAGMA journal_mode = WAL")
         connection.execute("PRAGMA synchronous = NORMAL")
-        _apply_migrations(connection)
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS article_history (
@@ -117,6 +119,7 @@ def initialize_database(config: dict) -> None:
             )
             """
         )
+        _apply_migrations(connection)
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS knowledge_entries (
@@ -224,15 +227,16 @@ def search_sample_nodes(connection: sqlite3.Connection, query: str, limit: int =
     return [dict(row) for row in rows]
 
 
-def fetch_article_history(connection: sqlite3.Connection, limit: int = 30) -> list[dict[str, Any]]:
+def fetch_article_history(connection: sqlite3.Connection, owner_token: str, limit: int = 30) -> list[dict[str, Any]]:
     rows = connection.execute(
         """
         SELECT id, input_type, source_url, article_text, report_json, created_at
         FROM article_history
+        WHERE owner_token = ?
         ORDER BY id DESC
         LIMIT ?
         """,
-        (limit,),
+        (owner_token, limit),
     ).fetchall()
     return [dict(row) for row in rows]
 
@@ -240,10 +244,10 @@ def fetch_article_history(connection: sqlite3.Connection, limit: int = 30) -> li
 def insert_article_history(connection: sqlite3.Connection, payload: dict[str, Any]) -> dict[str, Any]:
     cursor = connection.execute(
         """
-        INSERT INTO article_history (input_type, source_url, article_text, report_json)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO article_history (owner_token, input_type, source_url, article_text, report_json)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        (payload["input_type"], payload["source_url"], payload["article_text"], payload["report_json"]),
+        (payload["owner_token"], payload["input_type"], payload["source_url"], payload["article_text"], payload["report_json"]),
     )
     connection.commit()
     row = connection.execute(
