@@ -95,18 +95,18 @@ make init-db
 4. Run the development server:
 
 ```bash
-ALLOW_SERVER_RUN=1 make dev
+make dev
 ```
 
 Or start a specific shell explicitly:
 
 ```bash
-ALLOW_SERVER_RUN=1 make dev-auto
-ALLOW_SERVER_RUN=1 make dev-graphical
-ALLOW_SERVER_RUN=1 make dev-text
+make dev-auto
+make dev-graphical
+make dev-text
 ```
 
-The development commands now auto-read `deploy/app.env` and then a repo-root `.env`. The default app URL is `http://127.0.0.1:8001/` unless you set `GIZMOAPP_URL_PREFIX`, in which case the app lives under that prefix.
+The development commands now auto-read `deploy/app.env` and then a repo-root `.env`. They bind to all sandbox interfaces and use `PORT` when the preview supplies one, otherwise port 8001. If you set `GIZMOAPP_URL_PREFIX`, the app lives under that prefix.
 
 Run the repo-standard validation entry point with:
 

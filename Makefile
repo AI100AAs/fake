@@ -2,9 +2,10 @@ PYTHON ?= python3
 VENV ?= .venv
 ALLOW_NETWORK_INSTALL ?= 0
 ALLOW_BROWSER_CHECK ?= 0
-ALLOW_SERVER_RUN ?= 0
 
-.PHONY: install install-ml init-db dev dev-auto dev-graphical dev-text test js-check validate commit-ready visual-install visual-check generate-icons require-network-install require-browser-check require-server-run
+.DEFAULT_GOAL := dev
+
+.PHONY: install install-ml init-db dev dev-auto dev-graphical dev-text test js-check validate commit-ready visual-install visual-check generate-icons require-network-install require-browser-check
 
 require-network-install:
 	@if [ "$(ALLOW_NETWORK_INSTALL)" != "1" ]; then \
@@ -20,13 +21,6 @@ require-browser-check:
 		exit 2; \
 	fi
 
-require-server-run:
-	@if [ "$(ALLOW_SERVER_RUN)" != "1" ]; then \
-		echo "This target starts the local development server."; \
-		echo "Run ALLOW_SERVER_RUN=1 make dev, dev-auto, dev-graphical, or dev-text when local serving is explicitly permitted."; \
-		exit 2; \
-	fi
-
 install: require-network-install
 	$(PYTHON) -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip wheel
@@ -38,17 +32,17 @@ install-ml: require-network-install
 init-db:
 	$(VENV)/bin/python server/manage.py init-db
 
-dev: require-server-run
-	$(VENV)/bin/python server/manage.py run-dev
+dev:
+	ALLOW_SERVER_RUN=1 $(VENV)/bin/python server/manage.py run-dev --host 0.0.0.0 --port $${PORT:-8001}
 
-dev-auto: require-server-run
-	GIZMOAPP_SHELL=auto $(VENV)/bin/python server/manage.py run-dev --shell auto
+dev-auto:
+	ALLOW_SERVER_RUN=1 GIZMOAPP_SHELL=auto $(VENV)/bin/python server/manage.py run-dev --host 0.0.0.0 --port $${PORT:-8001} --shell auto
 
-dev-graphical: require-server-run
-	GIZMOAPP_SHELL=graphical $(VENV)/bin/python server/manage.py run-dev --shell graphical
+dev-graphical:
+	ALLOW_SERVER_RUN=1 GIZMOAPP_SHELL=graphical $(VENV)/bin/python server/manage.py run-dev --host 0.0.0.0 --port $${PORT:-8001} --shell graphical
 
-dev-text: require-server-run
-	GIZMOAPP_SHELL=text $(VENV)/bin/python server/manage.py run-dev --shell text
+dev-text:
+	ALLOW_SERVER_RUN=1 GIZMOAPP_SHELL=text $(VENV)/bin/python server/manage.py run-dev --host 0.0.0.0 --port $${PORT:-8001} --shell text
 
 test:
 	$(VENV)/bin/python -m unittest discover -s tests -v

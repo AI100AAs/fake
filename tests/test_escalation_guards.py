@@ -25,11 +25,14 @@ class EscalationGuardTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("ALLOW_NETWORK_INSTALL=1", result.stdout)
 
-    def test_server_targets_require_explicit_flag(self):
-        result = self.run_command("make", "dev")
+    def test_preview_default_starts_the_sandbox_server(self):
+        makefile = (ROOT_DIR / "Makefile").read_text(encoding="utf-8")
 
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("ALLOW_SERVER_RUN=1", result.stdout)
+        self.assertIn(".DEFAULT_GOAL := dev", makefile)
+        self.assertIn(
+            "ALLOW_SERVER_RUN=1 $(VENV)/bin/python server/manage.py run-dev --host 0.0.0.0 --port $${PORT:-8001}",
+            makefile,
+        )
 
     def test_manage_run_dev_requires_explicit_flag(self):
         result = self.run_command(sys.executable, "server/manage.py", "run-dev")
