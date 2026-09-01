@@ -212,7 +212,7 @@ function bootstrap() {
     const isUrl = /^https?:\/\//i.test(input.value.trim());
     const button = document.querySelector("#analyze-button");
     button.disabled = true;
-    reportState.textContent = isUrl ? "Fetching article and asking the course model..." : "Analyzing locally...";
+    reportState.textContent = isUrl ? "Fetching article and asking the course model..." : "Asking the course model...";
     try {
       let report;
       let articleText = input.value.trim();
@@ -223,11 +223,15 @@ function bootstrap() {
          report = payload.report;
          articleText = payload.articleText;
       } else {
-        report = analyze(input.value);
+        const response = await fetch(`${config.apiBase}/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ articleText: input.value.trim() }) });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.errors?.[0] || "The article could not be analyzed.");
+        report = payload.report;
+        articleText = payload.articleText;
       }
        lastReport = report;
        renderReport(report);
-      reportState.textContent = isUrl ? "Course model analysis complete" : "Analysis complete";
+      reportState.textContent = "Course model analysis complete";
       try {
         const historyResponse = await fetch(`${config.apiBase}/history`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inputType: isUrl ? "url" : "text", sourceUrl: isUrl ? input.value.trim() : "", articleText, report }) });
         if (!historyResponse.ok) throw new Error("History could not be saved.");

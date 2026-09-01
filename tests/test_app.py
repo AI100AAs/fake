@@ -4,6 +4,7 @@ import math
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from server.gizmoapp_server import create_app
 
@@ -202,6 +203,18 @@ class GizmoAppTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("Deployment-facing details", response.get_data(as_text=True))
+
+    def test_pasted_article_is_sent_to_course_model(self):
+        app = self.make_app()
+        article = "A pasted story makes a checkable claim about a new study and its reported results."
+        report = {"score": 70, "label": "Needs verification", "summary": "Check it.", "claims": [], "signals": []}
+
+        with patch("server.gizmoapp_server.api._llm_report", return_value=report) as llm_report:
+            response = app.test_client().post("/api/analyze", json={"articleText": article})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["articleText"], article)
+        llm_report.assert_called_once_with(article, "")
 
 
 if __name__ == "__main__":

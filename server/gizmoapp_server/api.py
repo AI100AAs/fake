@@ -345,16 +345,26 @@ def register_api_routes(app: Flask) -> None:
         if error:
             return error
         url = payload.get("url", "")
-        if not isinstance(url, str) or not url.strip() or len(url.strip()) > MAX_ARTICLE_URL_LENGTH:
+        pasted_text = payload.get("articleText", "")
+        if not isinstance(url, str):
+            return _error_response("url must be a readable link", 400)
+        if not isinstance(pasted_text, str):
+            return _error_response("articleText must be text", 400)
+        if not url.strip() and not pasted_text.strip():
+            return _error_response("Provide either a readable link or pasted article text", 400)
+        if len(url.strip()) > MAX_ARTICLE_URL_LENGTH:
             return _error_response(f"url must be a readable link of at most {MAX_ARTICLE_URL_LENGTH} characters", 400)
+        if len(pasted_text) > MAX_FETCHED_ARTICLE_LENGTH:
+            return _error_response(f"articleText must be at most {MAX_FETCHED_ARTICLE_LENGTH} characters", 400)
         try:
-            article = _fetch_article(url.strip())
-            report = _llm_report(article, url.strip())
+            source_url = url.strip()
+            article = _fetch_article(source_url) if source_url else pasted_text.strip()
+            report = _llm_report(article, source_url)
         except ValueError as exc:
             return _error_response(str(exc), 400)
         except CourseLLMError as exc:
             return _error_response(str(exc), 503)
-        return jsonify({"sourceUrl": url.strip(), "articleText": article, "report": report})
+        return jsonify({"sourceUrl": source_url, "articleText": article, "report": report})
 
     @app.get(scoped_path(prefix, "api/history"))
     def article_history():
