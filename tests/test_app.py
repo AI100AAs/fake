@@ -285,6 +285,15 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertIn("The main claim is plausible but needs verification.", prompt)
         self.assertIn("limited methodology", prompt)
 
+    def test_text_workspace_presents_steps_in_order(self):
+        html = self.make_app(shell_variant="text").test_client().get("/").get_data(as_text=True)
+
+        self.assertLess(html.index("01 / INPUT"), html.index("02 / ASSESSMENT"))
+        self.assertLess(html.index("02 / ASSESSMENT"), html.index("03 / KNOWLEDGE BASE"))
+        self.assertLess(html.index("03 / KNOWLEDGE BASE"), html.index("04 / DISCUSS THE ASSESSMENT"))
+        self.assertIn("Discuss this story's assessment", html)
+        self.assertIn("Answers use your report and reference shelf", html)
+
 
 if __name__ == "__main__":
     unittest.main()

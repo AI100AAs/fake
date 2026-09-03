@@ -11,7 +11,7 @@
 .status-pill { max-width: 100%; padding: .55rem .75rem; border: 1px solid #d9ded6; border-radius: 99px; color: #63706a; font-size: .72rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-pill i { display: inline-block; width: .45rem; height: .45rem; margin-right: .4rem; border-radius: 50%; background: #55a578; }
 .status-pill b { margin-left: .35rem; color: #d1d7ce; }
-.workspace-grid { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: 1rem; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
 .workspace-panel { padding: clamp(1rem, 2.2vw, 1.65rem); border: 1px solid #dce1d9; border-radius: 14px; background: #fff; box-shadow: 0 15px 35px rgba(36, 58, 44, .06); }
 .history-panel { margin-top: 1rem; }
 .history-heading-actions { display: flex; align-items: center; justify-content: flex-end; gap: .8rem; min-width: 0; }
