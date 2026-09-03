@@ -191,6 +191,12 @@ function bootstrap() {
     } catch (error) { addChatMessage("assistant", error.message); chatState.textContent = "Try again when the model is available"; }
     finally { chatSubmit.disabled = false; chatInput.focus(); }
   });
+  chatInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      if (!chatSubmit.disabled) chatInput.form.requestSubmit(chatSubmit);
+    }
+  });
   document.querySelector("#analyze-button").addEventListener("click", async () => {
     if (!input.value.trim()) { input.focus(); reportState.textContent = "Add an article first"; return; }
     const isUrl = /^https?:\/\//i.test(input.value.trim());

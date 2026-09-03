@@ -252,6 +252,8 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         prompt = ask.call_args.args[0]
         self.assertIn("78", prompt)
+        self.assertIn("actual assessment previously produced by the SignalCheck course model", prompt)
+        self.assertIn("model's recorded result", prompt)
         self.assertIn("The main claim is plausible but needs verification.", prompt)
         self.assertIn("limited methodology", prompt)
 
