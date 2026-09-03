@@ -184,7 +184,7 @@ function bootstrap() {
     if (!message) return;
     addChatMessage("user", message); chatInput.value = ""; chatSubmit.disabled = true; chatState.textContent = "Thinking with your sources...";
     try {
-      const response = await fetch(`${config.apiBase}/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, articleText: input.value.trim() }) });
+      const response = await fetch(`${config.apiBase}/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, articleText: input.value.trim(), report: lastReport || {} }) });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.errors?.[0] || "The evidence desk could not answer.");
       addChatMessage("assistant", payload.answer); chatState.textContent = "Answers use your reference shelf";

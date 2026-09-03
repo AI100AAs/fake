@@ -233,6 +233,28 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertEqual(second_history.get_json()["history"], [])
         self.assertEqual(missing_token.status_code, 401)
 
+    def test_evidence_desk_receives_section_two_assessment(self):
+        app = self.make_app()
+        report = {
+            "score": 78,
+            "label": "Mostly credible",
+            "summary": "The main claim is plausible but needs verification.",
+            "claims": [{"claim": "The study found an improvement.", "assessment": "supported", "evidence": "The article reports the study result but gives limited methodology."}],
+            "signals": [{"kind": "Missing context", "text": "The sample size is not stated.", "tone": "caution"}],
+        }
+
+        with patch("server.gizmoapp_server.api.ask", return_value="The score reflects the mixed evidence.") as ask:
+            response = app.test_client().post(
+                "/api/chat",
+                json={"message": "Why did you give this 78/100?", "articleText": "The study found an improvement.", "report": report},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        prompt = ask.call_args.args[0]
+        self.assertIn("78", prompt)
+        self.assertIn("The main claim is plausible but needs verification.", prompt)
+        self.assertIn("limited methodology", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()
