@@ -79,6 +79,16 @@ function renderHistoryItem(item, onSelect) {
   return button;
 }
 
+function readHistoryOwnerToken() {
+  const fragment = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+  const token = new URLSearchParams(fragment).get("history-owner");
+  return /^[0-9a-f]{64}$/.test(token || "") ? token : null;
+}
+
+function rememberHistoryOwnerToken(token) {
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#history-owner=${token}`);
+}
+
 function bootstrap() {
   const runtime = window.GizmoAppRuntime;
   if (!runtime) {
@@ -100,7 +110,7 @@ function bootstrap() {
   const chatState = document.querySelector("#chat-state");
   const chatInput = document.querySelector("#chat-input");
   const chatSubmit = document.querySelector("#chat-submit");
-  let historyOwnerToken = null;
+  let historyOwnerToken = readHistoryOwnerToken();
   const setTheme = (dark) => {
     document.documentElement.classList.toggle("dark-mode", dark);
     themeToggle.setAttribute("aria-pressed", String(dark));
@@ -121,6 +131,7 @@ function bootstrap() {
         const bootstrapPayload = await bootstrapResponse.json();
         if (!bootstrapResponse.ok || typeof bootstrapPayload.historyOwnerToken !== "string") throw new Error("History could not be initialized.");
         historyOwnerToken = bootstrapPayload.historyOwnerToken;
+        rememberHistoryOwnerToken(historyOwnerToken);
       }
       const response = await fetch(`${config.apiBase}/history`, { headers: { "X-History-Owner": historyOwnerToken } });
       const payload = await response.json();

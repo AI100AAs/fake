@@ -250,6 +250,14 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertEqual(len(client.get("/api/history", headers={"X-History-Owner": second_token}).get_json()["history"]), 1)
         self.assertEqual(client.delete("/api/history").status_code, 401)
 
+    def test_text_shell_keeps_history_owner_across_refreshes(self):
+        source = (Path(__file__).parents[1] / "server" / "gizmoapp_server" / "static" / "app" / "text" / "main.js").read_text(encoding="utf-8")
+
+        self.assertIn("readHistoryOwnerToken", source)
+        self.assertIn('new URLSearchParams(fragment).get("history-owner")', source)
+        self.assertIn("rememberHistoryOwnerToken(historyOwnerToken)", source)
+        self.assertIn("let historyOwnerToken = readHistoryOwnerToken();", source)
+
     def test_evidence_desk_receives_section_two_assessment(self):
         app = self.make_app()
         report = {
