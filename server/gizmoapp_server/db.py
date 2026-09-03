@@ -241,6 +241,12 @@ def fetch_article_history(connection: sqlite3.Connection, owner_token: str, limi
     return [dict(row) for row in rows]
 
 
+def delete_article_history(connection: sqlite3.Connection, owner_token: str) -> int:
+    cursor = connection.execute("DELETE FROM article_history WHERE owner_token = ?", (owner_token,))
+    connection.commit()
+    return cursor.rowcount
+
+
 def insert_article_history(connection: sqlite3.Connection, payload: dict[str, Any]) -> dict[str, Any]:
     cursor = connection.execute(
         """

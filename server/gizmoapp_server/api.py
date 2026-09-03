@@ -26,6 +26,7 @@ from .capabilities.search import search_records
 from .config import scoped_path
 from .db import (
     database_readiness,
+    delete_article_history,
     delete_knowledge_entry,
     fetch_article_history,
     fetch_knowledge_entries,
@@ -377,6 +378,18 @@ def register_api_routes(app: Flask) -> None:
         if owner_token is None:
             return _error_response("A valid history owner token is required", 401)
         return jsonify({"history": fetch_article_history(get_db(), owner_token, MAX_HISTORY_ITEMS)})
+
+    @app.delete(scoped_path(prefix, "api/history"))
+    def clear_article_history():
+        owner_token = _history_owner_token()
+        if owner_token is None:
+            return _error_response("A valid history owner token is required", 401)
+        try:
+            deleted = delete_article_history(get_db(), owner_token)
+        except sqlite3.OperationalError:
+            current_app.logger.exception("Database history delete failed")
+            return _error_response("History is temporarily unavailable; retry shortly", 503)
+        return jsonify({"deleted": deleted})
 
     @app.post(scoped_path(prefix, "api/history"))
     def save_article_history():

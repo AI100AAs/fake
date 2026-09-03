@@ -233,6 +233,23 @@ class GizmoAppTestCase(unittest.TestCase):
         self.assertEqual(second_history.get_json()["history"], [])
         self.assertEqual(missing_token.status_code, 401)
 
+    def test_article_history_can_be_cleared_for_one_owner(self):
+        app = self.make_app()
+        client = app.test_client()
+        first_token = client.get("/api/bootstrap").get_json()["historyOwnerToken"]
+        second_token = client.get("/api/bootstrap").get_json()["historyOwnerToken"]
+        payload = {"inputType": "text", "articleText": "Story to remove.", "report": {"score": 55}}
+
+        client.post("/api/history", headers={"X-History-Owner": first_token}, json=payload)
+        client.post("/api/history", headers={"X-History-Owner": second_token}, json=payload)
+        cleared = client.delete("/api/history", headers={"X-History-Owner": first_token})
+
+        self.assertEqual(cleared.status_code, 200)
+        self.assertEqual(cleared.get_json()["deleted"], 1)
+        self.assertEqual(client.get("/api/history", headers={"X-History-Owner": first_token}).get_json()["history"], [])
+        self.assertEqual(len(client.get("/api/history", headers={"X-History-Owner": second_token}).get_json()["history"]), 1)
+        self.assertEqual(client.delete("/api/history").status_code, 401)
+
     def test_evidence_desk_receives_section_two_assessment(self):
         app = self.make_app()
         report = {

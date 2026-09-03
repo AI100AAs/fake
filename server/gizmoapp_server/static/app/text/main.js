@@ -92,6 +92,7 @@ function bootstrap() {
   const historyList = document.querySelector("#history-list");
   const historyEmpty = document.querySelector("#history-empty");
   const historyState = document.querySelector("#history-state");
+  const clearHistory = document.querySelector("#clear-history");
   const knowledgeList = document.querySelector("#knowledge-list");
   const knowledgeEmpty = document.querySelector("#knowledge-empty");
   const knowledgeState = document.querySelector("#knowledge-state");
@@ -133,12 +134,29 @@ function bootstrap() {
         input.focus();
       })));
       historyEmpty.hidden = payload.history.length > 0;
+      clearHistory.disabled = payload.history.length === 0;
       historyState.textContent = payload.history.length ? `${payload.history.length} saved` : "No saved checks";
     } catch (error) {
       historyState.textContent = error.message;
       historyEmpty.hidden = false;
     }
   };
+  clearHistory.addEventListener("click", async () => {
+    if (!historyOwnerToken || !window.confirm("Clear all of your saved story history? This cannot be undone.")) return;
+    clearHistory.disabled = true;
+    historyState.textContent = "Clearing history...";
+    try {
+      const response = await fetch(`${config.apiBase}/history`, { method: "DELETE", headers: { "X-History-Owner": historyOwnerToken } });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.errors?.[0] || "History could not be cleared.");
+      historyList.replaceChildren();
+      historyEmpty.hidden = false;
+      historyState.textContent = "No saved checks";
+    } catch (error) {
+      historyState.textContent = error.message;
+      clearHistory.disabled = false;
+    }
+  });
   const renderKnowledge = () => {
     knowledgeList.replaceChildren(...knowledgeEntries.map((entry) => {
       const card = document.createElement("article"); card.className = "knowledge-card";
