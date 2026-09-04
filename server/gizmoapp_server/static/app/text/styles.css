@@ -52,7 +52,7 @@
 .section-heading h2 { margin: 0; color: #1c2b24; font: 700 1.45rem Georgia, serif; }
 .step-label { margin-bottom: .3rem; font-size: .62rem; }
 .text-button { border: 0; background: transparent; color: #28766d; cursor: pointer; font-size: .78rem; font-weight: 750; }
-textarea { display: block; width: 100%; min-height: 13.5rem; resize: vertical; border: 1px solid #dce3dc; border-radius: 9px; padding: 1rem; color: #25332c; background: #fbfcfa; line-height: 1.6; }
+textarea { display: block; width: 100%; min-height: 8rem; resize: vertical; border: 1px solid #dce3dc; border-radius: 9px; padding: 1rem; color: #25332c; background: #fbfcfa; line-height: 1.6; }
 textarea::placeholder { color: #a4ada6; }
 .input-footer { margin-top: .85rem; color: #9aa39b; font-size: .72rem; }
 .analyze-button { border: 0; border-radius: 7px; padding: .78rem 1rem; background: #1d6159; color: #fff; cursor: pointer; font-size: .82rem; font-weight: 750; }
