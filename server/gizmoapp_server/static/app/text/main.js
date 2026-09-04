@@ -1,3 +1,5 @@
+import { renderMarkdown } from "./markdown.js";
+
 let knowledgeEntries = [];
 
 function claimTerms(text) {
@@ -206,7 +208,8 @@ function bootstrap() {
   const addChatMessage = (role, text) => {
     const message = document.createElement("div"); message.className = `chat-message ${role}`;
     const label = document.createElement("strong"); label.textContent = role === "user" ? "You" : "Evidence desk";
-    const body = document.createElement("p"); body.textContent = text;
+    const body = document.createElement("div"); body.className = "chat-content";
+    if (role === "assistant") renderMarkdown(body, text); else { const paragraph = document.createElement("p"); paragraph.textContent = text; body.append(paragraph); }
     message.append(label, body); chatMessages.append(message); chatMessages.scrollTop = chatMessages.scrollHeight;
   };
   document.querySelector("#chat-form").addEventListener("submit", async (event) => {
