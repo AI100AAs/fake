@@ -215,11 +215,6 @@ def _cross_reference_knowledge(report: dict[str, Any], references: list[dict[str
         return report
 
     term_matches = [_shared_knowledge_matches(claim["claim"], references) for claim in claims]
-    shelf = "\n\n".join(
-        f"Reference ID: {entry['id']}\nTitle: {entry['title']}\nNotes: {entry['notes']}\n"
-        f"Shared terms with claims: {', '.join(match['matchedTerms']) if (match := next((item for item in term_matches[claim_index] if item['entryId'] == entry['id']), None)) else 'none'}"
-        for entry in references for claim_index in [0]
-    )
     # Include every claim's overlap in the prompt without asking the model to infer IDs.
     claim_context = "\n\n".join(
         f"Claim {index}: {claim['claim']}\nTerm matches: {json.dumps(term_matches[index])}"
@@ -443,6 +438,7 @@ def register_api_routes(app: Flask) -> None:
             source_url = url.strip()
             article = _fetch_article(source_url) if source_url else pasted_text.strip()
             report = _llm_report(article, source_url)
+            report = _cross_reference_knowledge(report, fetch_knowledge_entries(get_db(), MAX_KNOWLEDGE_ENTRIES))
         except ValueError as exc:
             return _error_response(str(exc), 400)
         except CourseLLMError as exc:

@@ -37,15 +37,17 @@ function renderReport(report) {
     });
     if (!sources.children.length) { const none = document.createElement("span"); none.textContent = "No independent source supplied"; sources.append(none); }
     const references = document.createElement("div"); references.className = "claim-references";
-    const referenceMatches = crossReferences(claim.claim);
+    const modelReferences = Array.isArray(claim.knowledgeCrossReferences) ? claim.knowledgeCrossReferences : [];
+    const referenceMatches = modelReferences.length ? modelReferences : crossReferences(claim.claim).map(({ entry, matchedTerms }) => ({ entryId: entry.id, title: entry.title, matchedTerms }));
     if (referenceMatches.length) {
-      const referenceLabel = document.createElement("small"); referenceLabel.textContent = "Knowledge-base cross-reference"; references.append(referenceLabel);
-      referenceMatches.forEach(({ entry, matchedTerms }) => {
+      const referenceLabel = document.createElement("small"); referenceLabel.textContent = modelReferences.length ? "Course-model knowledge cross-reference" : "Knowledge-base term match"; references.append(referenceLabel);
+      referenceMatches.forEach((match) => {
         const reference = document.createElement("div"); reference.className = "reference-match";
-        const referenceTitle = document.createElement("strong"); referenceTitle.textContent = entry.title;
-        const referenceTerms = document.createElement("span"); referenceTerms.textContent = `matches: ${matchedTerms.slice(0, 4).join(", ")}`;
+        const referenceTitle = document.createElement("strong"); referenceTitle.textContent = match.title;
+        const referenceTerms = document.createElement("span"); referenceTerms.textContent = modelReferences.length ? `${match.relationship}: ${match.explanation}` : `matches: ${match.matchedTerms.slice(0, 4).join(", ")}`;
         reference.append(referenceTitle, referenceTerms);
-        if (entry.source_url) { const link = document.createElement("a"); link.href = entry.source_url; link.target = "_blank"; link.rel = "noreferrer"; link.textContent = "Open source"; reference.append(link); }
+        const entry = knowledgeEntries.find((candidate) => candidate.id === match.entryId);
+        if (entry?.source_url) { const link = document.createElement("a"); link.href = entry.source_url; link.target = "_blank"; link.rel = "noreferrer"; link.textContent = "Open source"; reference.append(link); }
         references.append(reference);
       });
     }
